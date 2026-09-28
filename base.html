@@ -1,0 +1,47 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Inicio{% endblock %} · Copa Santa Fe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <header class="barra">
+    <div class="barra__interior">
+      <a class="marca" href="{% url 'core:dashboard' %}">
+        <span class="marca__torneo">Copa Santa Fe</span>
+        <span class="marca__modulo">Facturación y cartera</span>
+      </a>
+      {% if user.is_authenticated %}
+      <nav class="nav" aria-label="Principal">
+        {% with ruta=request.resolver_match.app_name %}
+        <a href="{% url 'core:dashboard' %}" {% if ruta == 'core' %}aria-current="page"{% endif %}>Inicio</a>
+        <a href="{% url 'equipos:lista' %}" {% if ruta == 'equipos' %}aria-current="page"{% endif %}>Equipos</a>
+        <span class="nav__pendiente" title="Se construye en la Fase 2">Facturación</span>
+        <span class="nav__pendiente" title="Se construye en la Fase 2">Cartera</span>
+        <span class="nav__pendiente" title="Se construye en la Fase 4">Plantilla masiva</span>
+        {% endwith %}
+      </nav>
+      <div class="usuario">
+        <span>{{ user.get_full_name|default:user.username }}</span>
+        {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="enlace">Salir</button></form>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="contenido">
+    {% if messages %}
+      <div class="mensajes" role="status">
+        {% for m in messages %}<p class="mensaje mensaje--{{ m.tags }}">{{ m }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {% block contenido %}{% endblock %}
+  </main>
+</body>
+</html>

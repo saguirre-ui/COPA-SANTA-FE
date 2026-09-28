@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block titulo %}Equipos{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Equipos</h1>
+    <p class="texto-suave">{{ total }} equipo{{ total|pluralize }} con los filtros actuales</p>
+  </div>
+  <a class="boton boton--primario" href="{% url 'equipos:crear' %}">+ Nuevo equipo</a>
+</div>
+
+<form method="get" class="filtros" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por club, razón social, NIT o responsable" aria-label="Buscar">
+  <select name="estado" aria-label="Estado">
+    <option value="activos" {% if estado == 'activos' %}selected{% endif %}>Activos</option>
+    <option value="inactivos" {% if estado == 'inactivos' %}selected{% endif %}>Inactivos</option>
+    <option value="todos" {% if estado == 'todos' %}selected{% endif %}>Todos</option>
+  </select>
+  <select name="seguimiento" aria-label="Seguimiento">
+    <option value="">Todo seguimiento</option>
+    {% for valor, texto in opciones_seguimiento %}
+    <option value="{{ valor }}" {% if seguimiento == valor %}selected{% endif %}>{{ texto }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="boton">Filtrar</button>
+  {% if q or estado != 'activos' or seguimiento %}<a href="{% url 'equipos:lista' %}" class="enlace">Limpiar</a>{% endif %}
+</form>
+
+<div class="tabla-contenedor">
+<table class="tabla">
+  <thead>
+    <tr>
+      <th>Equipo</th><th>NIT / cédula</th><th>Responsable</th><th>Correo</th><th>Teléfono</th>
+      <th>Estado</th><th>Seguimiento</th><th class="num">Facturas</th><th class="num">Saldo pendiente</th><th><span class="oculto">Acciones</span></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for e in pagina %}
+    <tr>
+      <td><a class="fuerte" href="{{ e.get_absolute_url }}">{{ e.nombre_club }}</a><div class="texto-suave pequeno">{{ e.razon_social }}</div></td>
+      <td class="num-texto">{{ e.documento_con_dv }}{% if e.alertas_facturacion %} <span class="punto-alerta" title="{{ e.alertas_facturacion|join:' ' }}">!</span>{% endif %}</td>
+      <td>{{ e.responsable|default:"—" }}</td>
+      <td>{{ e.correo|default:"—" }}</td>
+      <td>{{ e.telefono|default:"—" }}</td>
+      <td>{% if e.activo %}<span class="etiqueta etiqueta--ok">Activo</span>{% else %}<span class="etiqueta">Inactivo</span>{% endif %}</td>
+      <td><span class="etiqueta {% if e.seguimiento == 'Por facturar' %}etiqueta--aviso{% endif %}">{{ e.seguimiento }}</span></td>
+      <td class="num">{{ e.num_facturas }}</td>
+      <td class="num {% if e.saldo > 0 %}saldo-deuda{% endif %}">{{ e.saldo|pesos }}</td>
+      <td class="acciones"><a href="{{ e.get_absolute_url }}">Ver</a> <a href="{% url 'equipos:editar' e.pk %}">Editar</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="10" class="vacio">
+      {% if q %}Ningún equipo coincide con «{{ q }}». Revise la búsqueda o <a href="{% url 'equipos:lista' %}">vea todos</a>.
+      {% else %}No hay equipos registrados todavía. <a href="{% url 'equipos:crear' %}">Registrar el primero</a>.{% endif %}
+    </td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if pagina.has_other_pages %}
+<nav class="paginacion" aria-label="Páginas">
+  {% if pagina.has_previous %}<a href="?q={{ q }}&estado={{ estado }}&seguimiento={{ seguimiento }}&pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+  <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?q={{ q }}&estado={{ estado }}&seguimiento={{ seguimiento }}&pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

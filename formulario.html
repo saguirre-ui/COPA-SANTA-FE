@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <h1>{{ titulo }}</h1>
+  <a class="enlace" href="{% if equipo %}{{ equipo.get_absolute_url }}{% else %}{% url 'equipos:lista' %}{% endif %}">Cancelar</a>
+</div>
+
+<form method="post" class="formulario formulario--ancho" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="error-general">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+  <fieldset>
+    <legend>Equipo y facturación</legend>
+    <p class="texto-suave">Estos datos salen de la hoja Datos del Excel y son los que usa World Office.</p>
+    <div class="rejilla">
+      {% include "equipos/_campo.html" with campo=form.nombre_club clase="col-2" %}
+      {% include "equipos/_campo.html" with campo=form.razon_social clase="col-2" %}
+      {% include "equipos/_campo.html" with campo=form.documento clase="col-3" %}
+      {% include "equipos/_campo.html" with campo=form.digito_verificacion clase="col-1" %}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Condiciones de participación</legend>
+    <div class="rejilla">
+      {% include "equipos/_campo.html" with campo=form.valor %}
+      {% include "equipos/_campo.html" with campo=form.cuotas %}
+      {% include "equipos/_campo.html" with campo=form.descuentos %}
+      {% include "equipos/_campo.html" with campo=form.seguimiento %}
+    </div>
+    <p class="calculo" id="calculo">Valor por cuota: <strong id="valor-cuota">—</strong></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Contacto para cobro <span class="texto-suave">(opcional)</span></legend>
+    <div class="rejilla">
+      {% include "equipos/_campo.html" with campo=form.responsable %}
+      {% include "equipos/_campo.html" with campo=form.correo %}
+      {% include "equipos/_campo.html" with campo=form.telefono %}
+      {% include "equipos/_campo.html" with campo=form.direccion %}
+    </div>
+  </fieldset>
+
+  <div class="formulario__acciones">
+    <button type="submit" class="boton boton--primario">{% if equipo %}Guardar cambios{% else %}Crear equipo{% endif %}</button>
+  </div>
+</form>
+
+<script>
+  (function () {
+    const valor = document.getElementById("id_valor");
+    const cuotas = document.getElementById("id_cuotas");
+    const salida = document.getElementById("valor-cuota");
+    const fmt = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+    function calcular() {
+      const v = parseFloat(valor.value), c = parseInt(cuotas.value, 10);
+      salida.textContent = v > 0 && c > 0 ? fmt.format(v / c) + " × " + c : "—";
+    }
+    valor.addEventListener("input", calcular);
+    cuotas.addEventListener("input", calcular);
+    calcular();
+  })();
+</script>
+{% endblock %}

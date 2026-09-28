@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block titulo %}{{ equipo.nombre_club }}{% endblock %}
+{% block contenido %}
+<p class="migas"><a href="{% url 'equipos:lista' %}">Equipos</a> / {{ equipo.codigo }}</p>
+
+<div class="ficha-cabecera">
+  <div>
+    <h1>{{ equipo.nombre_club }}</h1>
+    <p class="texto-suave">{{ equipo.razon_social }} · {{ equipo.documento_con_dv }}</p>
+    <p>
+      {% if equipo.activo %}<span class="etiqueta etiqueta--ok">Activo</span>{% else %}<span class="etiqueta">Inactivo</span>{% endif %}
+      <span class="etiqueta {% if equipo.seguimiento == 'Por facturar' %}etiqueta--aviso{% endif %}">{{ equipo.seguimiento }}</span>
+    </p>
+  </div>
+  <div class="accesos">
+    <a class="boton" href="{% url 'equipos:editar' equipo.pk %}">Editar</a>
+    <form method="post" action="{% url 'equipos:cambiar_estado' equipo.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="boton">{% if equipo.activo %}Desactivar{% else %}Activar{% endif %}</button>
+    </form>
+  </div>
+</div>
+
+{% if equipo.alertas %}
+<div class="aviso-datos">
+  <strong>Revise estos datos antes de facturar</strong>
+  <ul>{% for a in equipo.alertas %}<li>{{ a }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="ficha">
+  <section class="panel">
+    <h2>Facturación</h2>
+    <dl class="datos">
+      <dt>Facturar a</dt><dd>{{ equipo.razon_social }}</dd>
+      <dt>NIT / cédula</dt><dd>{{ equipo.documento_con_dv }}</dd>
+      <dt>Valor</dt><dd>{{ equipo.valor|pesos }}</dd>
+      <dt>Descuentos</dt><dd>{{ equipo.descuentos|pesos }}</dd>
+      <dt>Cuotas</dt><dd>{{ equipo.cuotas }} de {{ equipo.valor_cuota|pesos }}</dd>
+      <dt>Nota de factura</dt><dd>{{ equipo.nota_factura }}</dd>
+    </dl>
+  </section>
+  <section class="panel">
+    <h2>Contacto</h2>
+    <dl class="datos">
+      <dt>Responsable</dt><dd>{{ equipo.responsable|default:"Sin registrar" }}</dd>
+      <dt>Correo</dt><dd>{% if equipo.correo %}<a href="mailto:{{ equipo.correo }}">{{ equipo.correo }}</a>{% else %}Sin registrar{% endif %}</dd>
+      <dt>Teléfono</dt><dd>{{ equipo.telefono|default:"Sin registrar" }}</dd>
+      <dt>Dirección</dt><dd>{{ equipo.direccion|default:"Sin registrar" }}</dd>
+    </dl>
+  </section>
+  <section class="panel panel--cartera">
+    <h2>Cartera</h2>
+    <dl class="datos">
+      <dt>Valor facturado</dt><dd class="num">{{ equipo.total_facturado|pesos }}</dd>
+      <dt>Valor pagado</dt><dd class="num">{{ equipo.total_pagado|pesos }}</dd>
+      <dt>Saldo pendiente</dt><dd class="num {% if equipo.saldo > 0 %}saldo-deuda{% endif %}">{{ equipo.saldo|pesos }}</dd>
+      <dt>Días de mora</dt><dd class="texto-suave">Fase 2</dd>
+      <dt>Estado de cartera</dt><dd class="texto-suave">Fase 2</dd>
+    </dl>
+  </section>
+</div>
+
+<section class="panel">
+  <h2>Facturas</h2>
+  <div class="tabla-contenedor">
+  <table class="tabla">
+    <thead><tr><th>N.º factura</th><th>Fecha</th><th>Concepto</th><th class="num">Valor</th><th>Vencimiento</th><th>Estado</th><th class="num">Saldo</th></tr></thead>
+    <tbody>
+    {% for f in facturas %}
+      <tr>
+        <td class="fuerte">{{ f.numero_completo }}</td>
+        <td>{{ f.fecha|date:"d/m/Y" }}</td>
+        <td>{{ f.nota|default:equipo.nota_factura }}</td>
+        <td class="num">{{ f.valor_total|pesos }}</td>
+        <td>{% for c in f.cuotas.all %}{{ c.vencimiento|date:"d/m/Y" }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+        <td class="texto-suave">Fase 2</td>
+        <td class="num">{{ f.saldo|pesos }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="vacio">Este equipo aún no tiene facturas. El registro de facturas llega en la Fase 2.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Pagos</h2>
+  <div class="tabla-contenedor">
+  <table class="tabla">
+    <thead><tr><th>Fecha</th><th>Factura</th><th>Cuota</th><th>Medio</th><th>Referencia</th><th class="num">Valor</th></tr></thead>
+    <tbody>
+    {% for p in pagos %}
+      <tr><td>{{ p.fecha|date:"d/m/Y" }}</td><td>{{ p.cuota.factura }}</td><td>{{ p.cuota.numero }}</td><td>{{ p.medio }}</td><td>{{ p.referencia|default:"—" }}</td><td class="num">{{ p.valor|pesos }}</td></tr>
+    {% empty %}
+      <tr><td colspan="6" class="vacio">Sin pagos registrados.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+{% if historial %}
+<section class="panel">
+  <h2>Historial</h2>
+  <ul class="movimientos">
+    {% for h in historial %}<li><time>{{ h.fecha|date:"d M Y, H:i" }}</time> {{ h.descripcion }} <span class="texto-suave">{{ h.usuario|default:"" }}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

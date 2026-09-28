@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Ingresar{% endblock %}
+{% block contenido %}
+<section class="ingreso">
+  <h1>Ingresar</h1>
+  <p class="texto-suave">Use el usuario asignado por Tesorería.</p>
+  <form method="post" class="formulario">
+    {% csrf_token %}
+    {% if form.errors %}<p class="error-general">Usuario o contraseña incorrectos. Verifique e intente de nuevo.</p>{% endif %}
+    <label>Usuario {{ form.username }}</label>
+    <label>Contraseña {{ form.password }}</label>
+    <button type="submit" class="boton boton--primario">Ingresar</button>
+  </form>
+</section>
+{% endblock %}

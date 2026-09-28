@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+<section class="portada">
+  <div>
+    <h1 class="portada__titulo">{{ config.nombre_torneo|title }} {{ config.anio|stringformat:"d" }}</h1>
+    <p class="portada__sub">Gestión de facturación y cartera · {{ config.edicion }} edición</p>
+  </div>
+  <div class="accesos">
+    <a class="boton boton--primario" href="{% url 'equipos:crear' %}">+ Nuevo equipo</a>
+    <a class="boton" href="{% url 'equipos:lista' %}">Ver equipos</a>
+    <span class="boton boton--inactivo" title="Disponible en la Fase 2">Gestionar cartera</span>
+    <span class="boton boton--inactivo" title="Disponible en la Fase 4">Plantilla masiva</span>
+  </div>
+</section>
+
+<section class="cifras" aria-label="Resumen">
+  <div class="cifra"><span class="cifra__valor">{{ total_equipos }}</span><span class="cifra__nombre">Equipos registrados</span></div>
+  <div class="cifra"><span class="cifra__valor">{{ equipos_activos }}</span><span class="cifra__nombre">Equipos activos</span></div>
+  <div class="cifra"><span class="cifra__valor">{{ por_facturar }}</span><span class="cifra__nombre">Pendientes por facturar</span></div>
+  <div class="cifra"><span class="cifra__valor">{{ facturas_generadas }}</span><span class="cifra__nombre">Facturas generadas</span></div>
+</section>
+
+<section class="cifras cifras--dinero" aria-label="Cartera">
+  <div class="cifra cifra--destacada"><span class="cifra__valor">{{ cartera_total|pesos }}</span><span class="cifra__nombre">Cartera total</span></div>
+  <div class="cifra"><span class="cifra__valor">{{ total_recaudado|pesos }}</span><span class="cifra__nombre">Total recaudado</span></div>
+  <div class="cifra cifra--pendiente"><span class="cifra__valor">—</span><span class="cifra__nombre">Cartera vencida · Fase 2</span></div>
+  <div class="cifra cifra--pendiente"><span class="cifra__valor">—</span><span class="cifra__nombre">Cartera por vencer · Fase 2</span></div>
+  <div class="cifra cifra--pendiente"><span class="cifra__valor">—</span><span class="cifra__nombre">Facturas pendientes de pago · Fase 2</span></div>
+</section>
+
+<section class="panel">
+  <h2>Últimos movimientos</h2>
+  {% if ultimos_movimientos %}
+  <ul class="movimientos">
+    {% for m in ultimos_movimientos %}
+    <li><time>{{ m.fecha|date:"d M, H:i" }}</time> {{ m.descripcion }} <span class="texto-suave">{{ m.usuario|default:"" }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="vacio">Aún no hay movimientos. Empiece registrando el primer equipo. <a href="{% url 'equipos:crear' %}">Registrar equipo</a></p>
+  {% endif %}
+</section>
+{% endblock %}
